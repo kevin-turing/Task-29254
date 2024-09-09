@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Inflation Impact on Retirement Savings</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+    />
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        width: 80%;
+        margin: auto;
+        overflow: hidden;
+      }
+      .controls,
+      .results {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+      .graph {
+        width: 100%;
+        height: 400px;
+      }
+      .slider {
+        width: 100%;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Inflation Impact on Retirement Savings</h1>
+      <div class="controls">
+        <label for="inflationRate">Inflation Rate (%):</label>
+        <input
+          type="text"
+          id="inflationRate"
+          value="6"
+          readonly
+          style="border: 0; color: #f6931f; font-weight: bold"
+        />
+        <div id="inflationSlider" class="slider"></div>
+
+        <label for="retirementYears">Retirement Period (Years):</label>
+        <input
+          type="text"
+          id="retirementYears"
+          value="10"
+          readonly
+          style="border: 0; color: #f6931f; font-weight: bold"
+        />
+        <div id="yearsSlider" class="slider"></div>
+
+        <label for="investmentReturn">Investment Return (%):</label>
+        <input
+          type="text"
+          id="investmentReturn"
+          value="7"
+          readonly
+          style="border: 0; color: #f6931f; font-weight: bold"
+        />
+        <div id="returnSlider" class="slider"></div>
+      </div>
+
+      <div class="results">
+        <canvas id="inflationChart" class="graph"></canvas>
+        <p>
+          Adjusted Value of Rs 1 Crore after
+          <span id="yearsDisplay">10</span> years:
+          <strong>Rs <span id="adjustedValue">55,84,000</span></strong>
+        </p>
+        <p>
+          Effective Purchasing Power with Investment: Rs
+          <span id="effectiveValue">0</span>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      $(function () {
+        let ctx = document.getElementById('inflationChart').getContext('2d');
+        let chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Value of Rs 1 Crore',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function (value, index, values) {
+                    return 'Rs ' + value.toLocaleString('en-IN');
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        function updateChart() {
+          let inflationRate = $('#inflationRate').val() / 100;
+          let years = $('#retirementYears').val();
+          let returnRate = $('#investmentReturn').val() / 100;
+
+          let labels = Array.from({ length: parseInt(years) }, (_, i) => i + 1);
+          let data = labels.map((year) => {
+            let futureValue = 10000000 * Math.pow(1 + inflationRate, -year);
+            return Math.round(futureValue);
+          });
+
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = data;
+          chart.update();
+
+          let adjustedValue = data[data.length - 1];
+          $('#adjustedValue').text(adjustedValue.toLocaleString('en-IN'));
+
+          let effectiveValue =
+            10000000 *
+            Math.pow(1 + returnRate, years) *
+            Math.pow(1 + inflationRate, -years);
+          $('#effectiveValue').text(
+            Math.round(effectiveValue).toLocaleString('en-IN')
+          );
+        }
+
+        $('#inflationSlider').slider({
+          min: 1,
+          max: 10,
+          value: 6,
+          slide: function (event, ui) {
+            $('#inflationRate').val(ui.value);
+            updateChart();
+          },
+        });
+
+        $('#yearsSlider').slider({
+          min: 10,
+          max: 30,
+          step: 10,
+          value: 10,
+          slide: function (event, ui) {
+            $('#retirementYears').val(ui.value);
+            $('#yearsDisplay').text(ui.value);
+            updateChart();
+          },
+        });
+
+        $('#returnSlider').slider({
+          min: 0,
+          max: 15,
+          value: 7,
+          slide: function (event, ui) {
+            $('#investmentReturn').val(ui.value);
+            updateChart();
+          },
+        });
+
+        updateChart();
+      });
+    </script>
+  </body>
+</html>
