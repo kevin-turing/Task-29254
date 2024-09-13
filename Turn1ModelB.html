@@ -1,1 +1,105 @@
-T1MB
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inflation Impact on Retirement Savings</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .controls, .charts { margin: 20px 0; }
+        .slider { width: 100%; margin: 10px 0; }
+        .chart-container { width: 100%; height: 300px; }
+        #result { font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Impact of Inflation on Retirement Savings</h1>
+    
+    <!-- Controls -->
+    <div class="controls">
+        <label for="inflationRate">Inflation Rate (%):</label>
+        <input type="range" min="1" max="10" value="6" class="slider" id="inflationRate">
+        <span id="inflationDisplay">6%</span><br>
+        
+        <label for="retirementYears">Retirement Period (Years):</label>
+        <input type="range" min="10" max="30" step="10" value="20" class="slider" id="retirementYears">
+        <span id="yearsDisplay">20 Years</span><br>
+
+        <label for="investmentReturn">Investment Return (%):</label>
+        <input type="range" min="1" max="15" value="7" class="slider" id="investmentReturn">
+        <span id="returnDisplay">7%</span>
+    </div>
+
+    <!-- Visualization -->
+    <div class="charts">
+        <div class="chart-container">
+            <canvas id="inflationChart"></canvas>
+        </div>
+        <div id="result">Current purchasing power of Rs 1 crore after <span id="displayYears">20</span> years: Rs <span id="purchasingPower"></span></div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        const ctx = document.getElementById('inflationChart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Purchasing Power of Rs 1 Crore',
+                    borderColor: 'blue',
+                    data: [],
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Value in Today\'s Rupees' }
+                    }
+                }
+            }
+        });
+
+        function updateChart(years, inflationRate) {
+            let labels = Array.from({length: years + 1}, (_, i) => i);
+            let data = labels.map(year => {
+                return 10000000 * Math.pow((1 + inflationRate / 100), -year);
+            });
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.update();
+
+            // Update purchasing power display
+            document.getElementById('purchasingPower').textContent = data[years].toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        // Sliders update
+        document.getElementById('inflationRate').oninput = function() {
+            document.getElementById('inflationDisplay').textContent = this.value + '%';
+            updateChart(document.getElementById('retirementYears').value, this.value);
+        };
+
+        document.getElementById('retirementYears').oninput = function() {
+            document.getElementById('yearsDisplay').textContent = this.value + ' Years';
+            document.getElementById('displayYears').textContent = this.value;
+            updateChart(this.value, document.getElementById('inflationRate').value);
+        };
+
+        document.getElementById('investmentReturn').oninput = function() {
+            document.getElementById('returnDisplay').textContent = this.value + '%';
+            // Here you could compare investment returns with inflation, but for simplicity, we're focusing on inflation
+        };
+
+        // Initial chart setup
+        updateChart(20, 6);
+    </script>
+</div>
+</body>
+</html>
